@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using XminTest.Entities;
 
@@ -16,7 +17,10 @@ public class AwesomeDbContext : DbContext
     {
         base.OnConfiguring(optionsBuilder);
 
-        optionsBuilder.UseNpgsql(Configuration.ConnectionString);
+        optionsBuilder.UseNpgsql(Configuration.ConnectionString)
+            .LogTo(Console.WriteLine, LogLevel.Debug)
+            .EnableSensitiveDataLogging()
+            .EnableDetailedErrors();
     }
 
     private static volatile int _xminSize;
@@ -48,7 +52,7 @@ public class AwesomeDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         var byteArrayValueComparer = new ValueComparer<byte[]>(
             (x,y) => y != null && x.SequenceEqual(y),
             x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -74,28 +78,57 @@ public class AwesomeDbContext : DbContext
             }
             
             Console.WriteLine("Init: Using vanilla Postgres mapping");
-            
-            entityBuilder.Property(x => x.Timestamp)
-                .HasColumnName("xmin")
-                .HasColumnType("xid")
-                .HasConversion(
-                    convertToUint,
-                    convertFromUint,
-                    byteArrayValueComparer);
+
+            if (!Configuration.UseLongForXmin)
+            {
+                entityBuilder.Property(x => x.Timestamp)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .HasConversion(
+                        convertToUint,
+                        convertFromUint,
+                        byteArrayValueComparer);
+
+                entityBuilder.Ignore(x => x.Timestamp2);
+            }
+            else
+            {
+                entityBuilder.Ignore(x => x.Timestamp);
+                
+                entityBuilder.Property(x => x.Timestamp2)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .IsRowVersion();
+            }
         }
         else
         {
             // Here we are for PostgresPro
             
             Console.WriteLine("Init: Using PostgresPro mapping");
+
+            if (!Configuration.UseLongForXmin)
+            {
+                entityBuilder.Property(x => x.Timestamp)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid8") // no effect: Npgsql use xid anyway
+                    .HasConversion(
+                        convertToUlong,
+                        convertFromUlong,
+                        byteArrayValueComparer);
+                
+                entityBuilder.Ignore(x => x.Timestamp2);
+            }
+            else
+            {
+                entityBuilder.Ignore(x => x.Timestamp);
+                
+                entityBuilder.Property(x => x.Timestamp2)
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid8")
+                    .IsRowVersion();
+            }
             
-            entityBuilder.Property(x => x.Timestamp)
-                .HasColumnName("xmin")
-                .HasColumnType("xid8") // no effect: Npgsql use xid anyway
-                .HasConversion(
-                    convertToUlong,
-                    convertFromUlong,
-                    byteArrayValueComparer);
         }
     }
 }

@@ -8,7 +8,7 @@ Console.WriteLine("Creating new SuperHero...");
 
 try
 {
-    using (TransactionScope scope = new TransactionScope())
+    using (TransactionScope scope = new TransactionScope(TransactionScopeOption.RequiresNew))
     {
         using (var context = new AwesomeDbContext())
         {
@@ -17,11 +17,14 @@ try
                 Id = 1,
                 Name = "Kapitoshka"
             });
+            
             context.SaveChanges();
         }
         
         scope.Complete();
     }
+    
+    Console.WriteLine("SuperHero created.");
 }
 catch (Exception ex)
 {

@@ -13,4 +13,6 @@ public class SuperHero
     
     [Timestamp]
     public byte[] Timestamp { get; set; }
+    
+    public ulong Timestamp2 { get; set; }
 }
