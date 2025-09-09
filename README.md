@@ -31,3 +31,5 @@ exception: The read on this field has not consumed all of its bytes (pos: 4, len
 ## Other variants
 
 Using property with ulong type (Timestamp2 in this example) also will not work - for same reasons. You can switch to this approach by setting UseLongForXmin to true.
+
+Solutions welcome!
