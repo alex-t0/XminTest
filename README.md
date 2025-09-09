@@ -26,5 +26,5 @@ exception: The read on this field has not consumed all of its bytes (pos: 4, len
 - Use XminTest/SQL/SuperHero.sql to create SuperHero table;
 - In Configuration.cs change connection string to your correct;
 - Also in Configuration.cs you may change MakeCustomMappingForPostgresPro value (but if it equals true another exception occurs: can't map ulong to xid)
-- Build in Rider and run (or simple `dotnet run').
+- Build in Rider and run (or simple `dotnet run`).
 
