@@ -28,3 +28,6 @@ exception: The read on this field has not consumed all of its bytes (pos: 4, len
 - Also in Configuration.cs you may change MakeCustomMappingForPostgresPro value (but if it equals true another exception occurs: can't map ulong to xid)
 - Build in Rider and run (or simple `dotnet run`).
 
+## Other variants
+
+Using property with ulong type (Timestamp2 in this example) also will not work - for same reasons. You can switch to this approach by setting UseLongForXmin to true.
